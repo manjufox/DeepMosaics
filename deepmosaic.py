@@ -1,14 +1,9 @@
 import os
 import sys
 import traceback
-try:
-    from cores import Options,add,clean,style
-    from util import util
-    from models import loadmodel
-except Exception as e:
-    print(e)
-    input('Please press any key to exit.\n')
-    sys.exit(0)
+from cores import Options,add,clean,style
+from util import util
+from models import loadmodel
 
 opt = Options().getparse(test_flag = True)
 if not os.path.isdir(opt.temp_dir):
@@ -43,6 +38,11 @@ def main():
             netG = loadmodel.pix2pix(opt)
         
         for file in files:
+            outputfile = os.path.join(opt.result_dir,os.path.splitext(os.path.basename(file))[0]+'_clean.mp4')
+            if os.path.exists(outputfile):
+                print(f'{outputfile} already exists')
+                files = util.Traversal(opt.media_path)
+                continue
             opt.media_path = file
             if util.is_img(file):
                 clean.cleanmosaic_img(opt,netG,netM)
@@ -76,6 +76,7 @@ if __name__ == '__main__':
     try:
         main()
         print('Finished!')
+        sys.exit(0)
     except Exception as ex:
         print('--------------------ERROR--------------------')
         print('--------------Environment--------------')
@@ -94,6 +95,4 @@ if __name__ == '__main__':
         print(ex_val)
         for stack in traceback.extract_tb(ex_stack):
             print(stack)
-        input('Please press any key to exit.\n')
         #util.clean_tempfiles(tmp_init = False)
-        sys.exit(0)

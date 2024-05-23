@@ -33,7 +33,7 @@ def get_mosaic_positions(opt,netM,imagepaths,savemask=True):
         cv2.namedWindow('mosaic mask', cv2.WINDOW_NORMAL)
     print('Step:2/4 -- Find mosaic location')
 
-    img_read_pool = Queue(4)
+    img_read_pool = Queue(100)
     def loader(imagepaths):
         for imagepath in imagepaths:
             img_origin = impro.imread(os.path.join(opt.temp_dir+'/video2image',imagepath))
@@ -44,7 +44,8 @@ def get_mosaic_positions(opt,netM,imagepaths,savemask=True):
 
     for i,imagepath in enumerate(imagepaths,1):
         img_origin = img_read_pool.get()
-        x,y,size,mask = runmodel.get_mosaic_position(img_origin,netM,opt)
+        if i%5 == 1:
+            x,y,size,mask = runmodel.get_mosaic_position(img_origin,netM,opt)
         positions.append([x,y,size])
         if savemask:
             t = Thread(target=cv2.imwrite,args=(os.path.join(opt.temp_dir+'/mosaic_mask',imagepath), mask,))
@@ -176,8 +177,8 @@ def cleanmosaic_video_fusion(opt,netG,netM):
     # clean mosaic
     print('Step:3/4 -- Clean Mosaic:')
     length = len(imagepaths)
-    write_pool = Queue(4)
-    show_pool = Queue(4)
+    write_pool = Queue(100)
+    show_pool = Queue(100)
     def write_result():
         while True:
             save_ori,imagepath,img_origin,img_fake,x,y,size = write_pool.get()
@@ -212,7 +213,7 @@ def cleanmosaic_video_fusion(opt,netG,netM):
                 cv2.imshow('clean',show_pool.get())
                 cv2.waitKey(1) & 0xFF
 
-        if size>50:
+        if size>0:
             try:#Avoid unknown errors
                 for pos in FRAME_POS:
                     input_stream.append(impro.resize(img_pool[pos][y-size:y+size,x-size:x+size], INPUT_SIZE,interpolation=cv2.INTER_CUBIC)[:,:,::-1])

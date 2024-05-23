@@ -61,7 +61,7 @@ def run_styletransfer(opt, net, img):
     return img
 
 def get_ROI_position(img,net,opt,keepsize=True):
-    mask = run_segment(img,net,size=360,gpu_id = opt.gpu_id)
+    mask = run_segment(img,net,size=240,gpu_id = opt.gpu_id)
     mask = impro.mask_threshold(mask,opt.mask_extend,opt.mask_threshold)
     if keepsize:
         mask = impro.resize_like(mask, img)
@@ -70,14 +70,14 @@ def get_ROI_position(img,net,opt,keepsize=True):
 
 def get_mosaic_position(img_origin,net_mosaic_pos,opt):
     h,w = img_origin.shape[:2]
-    mask = run_segment(img_origin,net_mosaic_pos,size=360,gpu_id = opt.gpu_id)
+    mask = run_segment(img_origin,net_mosaic_pos,size=240,gpu_id = opt.gpu_id)
     # mask_1 = mask.copy()
     mask = impro.mask_threshold(mask,ex_mun=int(min(h,w)/20),threshold=opt.mask_threshold)
     if not opt.all_mosaic_area:
         mask = impro.find_mostlikely_ROI(mask)
     x,y,size,area = impro.boundingSquare(mask,Ex_mul=opt.ex_mult)
     #Location fix
-    rat = min(h,w)/360.0
+    rat = min(h,w)/240.0
     x,y,size = int(rat*x),int(rat*y),int(rat*size)
     x,y = np.clip(x, 0, w),np.clip(y, 0, h)
     size = np.clip(size, 0, min(w-x,h-y))
